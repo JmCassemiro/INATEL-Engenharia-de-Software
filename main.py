@@ -47,6 +47,23 @@ def listar_pokemons(limit: int = 100, offset: int = 0):
         }
     else:
         raise HTTPException(status_code=404, detail="Pokémons não encontrados.")
+    
+@app.get("/pokemon/tipo/{tipo}")
+def listar_pokemons_por_tipo(tipo: str):
+    url = f"https://pokeapi.co/api/v2/type/{tipo.lower()}"
+    resposta = requests.get(url)
+    if resposta.status_code == 200:
+        dados = resposta.json()
+        pokemons = [
+            {
+                "nome": p["pokemon"]["name"].capitalize(),
+                "url": p["pokemon"]["url"]
+            }
+            for p in dados["pokemon"]
+        ]
+        return {"tipo": tipo.capitalize(), "pokemons": pokemons, "quantidade": len(pokemons)}
+    else:
+        raise HTTPException(status_code=404, detail=f"Tipo '{tipo}' não encontrado.")
 
 
 if __name__ == "__main__":
