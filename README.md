@@ -1,6 +1,6 @@
 # Pokédex FastAPI
 
-Uma aplicação simples de Pokédex usando **FastAPI** no backend e HTML/CSS/JS no frontend, consumindo dados da [PokeAPI](https://pokeapi.co/).
+Uma aplicação simples de Pokédex usando **FastAPI** no backend e HTML/CSS/JS no frontend, consumindo dados da [PokeAPI](https://pokeapi.co).
 
 ## Funcionalidades
 
