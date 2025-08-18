@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <title>Pokedex Jm</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
+
 <body>
     <h1>Pokedex</h1>
     <div class="container">
@@ -13,6 +15,11 @@
         <button onclick="buscarPokemon()">Buscar</button>
 
         <div class="resultado" id="resultado"></div>
+
+        <h3>Buscar Pokémon por Tipo</h3>
+        <input type="text" id="tipo" placeholder="Digite o tipo (ex: fire)">
+        <button onclick="buscarPorTipo()">Buscar por Tipo</button>
+        <div class="resultado" id="resultado-tipo"></div>
 
         <h3>Listar Pokémons</h3>
         <button onclick="listarPokemons()">Carregar Lista</button>
@@ -42,35 +49,59 @@
             }
         }
 
+        async function buscarPorTipo() {
+            const tipo = document.getElementById("tipo").value;
+            const resultadoTipoDiv = document.getElementById("resultado-tipo");
+            resultadoTipoDiv.innerHTML = "Carregando...";
+
+            try {
+                const resp = await fetch(`${API_URL}/pokemon/tipo/${tipo}`);
+                if (!resp.ok) throw new Error("Tipo não encontrado!");
+                const data = await resp.json();
+
+                resultadoTipoDiv.innerHTML = `
+                    <strong>Tipo:</strong> ${data.tipo} <br>
+                    <strong>Quantidade:</strong> ${data.quantidade} <br>
+                    <strong>Pokémons:</strong>
+                    <ul>
+                        ${data.pokemons.map(p => `<li>${p.nome}</li>`).join("")}
+                    </ul>
+                `;
+            } catch (err) {
+                resultadoTipoDiv.innerHTML = `<span style="color:red;">${err.message}</span>`;
+            }
+        }
+
         let currentOffset = 0;
-const limit = 100; // Quantos pokémons por página
+        const limit = 100; // Quantos pokémons por página
 
-async function listarPokemons(offset = 0) {
-    currentOffset = offset;
-    const listaDiv = document.getElementById("lista");
-    listaDiv.innerHTML = "Carregando...";
+        async function listarPokemons(offset = 0) {
+            currentOffset = offset;
+            const listaDiv = document.getElementById("lista");
+            listaDiv.innerHTML = "Carregando...";
 
-    try {
-        const resp = await fetch(`${API_URL}/pokemon?limit=${limit}&offset=${offset}`);
-        if (!resp.ok) throw new Error("Erro ao carregar lista.");
-        const data = await resp.json();
+            try {
+                const resp = await fetch(`${API_URL}/pokemon?limit=${limit}&offset=${offset}`);
+                if (!resp.ok) throw new Error("Erro ao carregar lista.");
+                const data = await resp.json();
 
-        listaDiv.innerHTML = data.pokemons.map(p =>
-            `<div class="pokemon-item"><strong>${p.id}</strong> - ${p.nome}</div>`
-        ).join("");
+                listaDiv.innerHTML = data.pokemons.map(p =>
+                    `<div class="pokemon-item"><strong>${p.id}</strong> - ${p.nome}</div>`
+                ).join("");
 
-        // Adiciona botões de navegação
-        listaDiv.innerHTML += `
-            <div style="margin-top: 10px; display: flex; justify-content: space-between;">
-                <button onclick="listarPokemons(${data.previous_offset})" ${offset === 0 ? 'disabled' : ''}>Anterior</button>
-                <button onclick="listarPokemons(${data.next_offset})">Próximo</button>
-            </div>
-        `;
+                // Adiciona botões de navegação
+                listaDiv.innerHTML += `
+                    <div style="margin-top: 10px; display: flex; justify-content: space-between;">
+                        <button onclick="listarPokemons(${data.previous_offset})" ${offset === 0 ? 'disabled' : ''}>Anterior</button>
+                        <button onclick="listarPokemons(${data.next_offset})">Próximo</button>
+                    </div>
+                `;
 
-    } catch (err) {
-        listaDiv.innerHTML = `<span style="color:red;">${err.message}</span>`;
-    }
-}
+            } catch (err) {
+                listaDiv.innerHTML = `<span style="color:red;">${err.message}</span>`;
+            }
+        }
     </script>
 </body>
+
 </html>
