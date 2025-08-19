@@ -46,8 +46,8 @@ def listar_pokemons(limit: int = 100, offset: int = 0):
             "previous_offset": max(offset - limit, 0)
         }
     else:
-        raise HTTPException(status_code=404, detail="Pokémons não encontrados.")
+        raise HTTPException(status_code=404, detail="Pokémons não foram encontrados na lista.")
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("main:app", host="127.0.0.1", port=4000, reload=True)
