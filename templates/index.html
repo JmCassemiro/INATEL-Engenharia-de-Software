@@ -1,107 +1,206 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Pokedex Jm</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <h1>Pokédex 📱</h1>
 
-<body>
-    <h1>Pokedex</h1>
     <div class="container">
-        <h3>Buscar Pokémon por Nome</h3>
-        <input type="text" id="nome" placeholder="Digite o nome do Pokémon">
+      <!-- Buscar Pokémon por Nome -->
+      <div class="busca">
+        <h3>🔍 Buscar Pokémon por Nome</h3>
+        <input type="text" id="nome" placeholder="Digite o nome do Pokémon" />
         <button onclick="buscarPokemon()">Buscar</button>
-
         <div class="resultado" id="resultado"></div>
+      </div>
 
-        <h3>Buscar Pokémon por Tipo</h3>
-        <input type="text" id="tipo" placeholder="Digite o tipo (ex: fire)">
+      <!-- Buscar Pokémon por Tipo -->
+      <div class="busca">
+        <h3>📕 Buscar Pokémon por Tipo</h3>
+        <input type="text" id="tipo" placeholder="Digite o tipo (ex: fire)" />
         <button onclick="buscarPorTipo()">Buscar por Tipo</button>
         <div class="resultado" id="resultado-tipo"></div>
+      </div>
 
-        <h3>Listar Pokémons</h3>
+      <!-- Listar todos os Pokémons -->
+      <div class="busca">
+        <h3>📋 Listar Pokémons</h3>
         <button onclick="listarPokemons()">Carregar Lista</button>
         <div class="lista" id="lista"></div>
+      </div>
     </div>
 
     <script>
-        const API_URL = "http://127.0.0.1:8000";
+      const API_URL = "http://127.0.0.1:8000";
+      const tipoLimit = 50;
+      const limit = 50;
 
-        async function buscarPokemon() {
-            const nome = document.getElementById("nome").value;
-            const resultadoDiv = document.getElementById("resultado");
-            resultadoDiv.innerHTML = "Carregando...";
+      const tipoCores = {
+        fire: "#F08030",
+        water: "#6890F0",
+        grass: "#78C850",
+        electric: "#F8D030",
+        ice: "#98D8D8",
+        fighting: "#C03028",
+        poison: "#A040A0",
+        ground: "#E0C068",
+        flying: "#A890F0",
+        psychic: "#F85888",
+        bug: "#A8B820",
+        rock: "#B8A038",
+        ghost: "#705898",
+        dragon: "#7038F8",
+        dark: "#705848",
+        steel: "#B8B8D0",
+        fairy: "#EE99AC",
+        normal: "#A8A878",
+      };
 
-            try {
-                const resp = await fetch(`${API_URL}/pokemon/${nome}`);
-                if (!resp.ok) throw new Error("Pokémon não encontrado!");
-                const data = await resp.json();
-
-                resultadoDiv.innerHTML = `
-                    <strong>Nome:</strong> ${data.nome} <br>
-                    <strong>ID:</strong> ${data.id} <br>
-                    <strong>Tipos:</strong> ${data.tipos.join(", ")}
-                `;
-            } catch (err) {
-                resultadoDiv.innerHTML = `<span style="color:red;">${err.message}</span>`;
-            }
+      // Buscar Pokémon por nome
+      async function buscarPokemon() {
+        const nome = document.getElementById("nome").value.toLowerCase();
+        const resultadoDiv = document.getElementById("resultado");
+        resultadoDiv.innerHTML = "Carregando...";
+        try {
+          const resp = await fetch(`${API_URL}/pokemon/${nome}`);
+          if (!resp.ok) throw new Error("Pokémon não encontrado!");
+          const data = await resp.json();
+          const imgUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${data.id}.png`;
+          const tiposHtml = data.tipos
+            .map(
+              (t) =>
+                `<span class="tipo" style="background:${
+                  tipoCores[t] || "#777"
+                }">${t}</span>`
+            )
+            .join(" ");
+          resultadoDiv.innerHTML = `
+      <div class="card-pokemon">
+        <img src="${imgUrl}" alt="${data.nome}" />
+        <h3>${data.nome}</h3>
+        <p>ID: <span class="pokemon-id">${data.id}</span></p>
+        <p>${tiposHtml}</p>
+      </div>
+    `;
+        } catch (err) {
+          resultadoDiv.innerHTML = `<p class="erro">⚠️ ${err.message}</p>`;
         }
+      }
 
-        async function buscarPorTipo() {
-            const tipo = document.getElementById("tipo").value;
-            const resultadoTipoDiv = document.getElementById("resultado-tipo");
-            resultadoTipoDiv.innerHTML = "Carregando...";
+      // Buscar Pokémon por tipo
+      async function buscarPorTipo(offset = 0) {
+        const tipo = document.getElementById("tipo").value.toLowerCase();
+        const resultadoTipoDiv = document.getElementById("resultado-tipo");
+        resultadoTipoDiv.innerHTML = "Carregando...";
+        try {
+          const resp = await fetch(
+            `${API_URL}/pokemon/tipo/${tipo}?limit=${tipoLimit}&offset=${offset}`
+          );
+          if (!resp.ok) throw new Error("Tipo não encontrado!");
+          const data = await resp.json();
 
-            try {
-                const resp = await fetch(`${API_URL}/pokemon/tipo/${tipo}`);
-                if (!resp.ok) throw new Error("Tipo não encontrado!");
-                const data = await resp.json();
+          // Buscar dados completos de cada Pokémon
+          let listaHTML = await Promise.all(
+            data.pokemons.map(async (p) => {
+              const respPoke = await fetch(
+                `${API_URL}/pokemon/${p.nome.toLowerCase()}`
+              );
+              const pokeData = respPoke.ok
+                ? await respPoke.json()
+                : { id: "-", tipos: [] };
+              const imgUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokeData.id}.png`;
+              const tiposHtml = pokeData.tipos
+                .map(
+                  (t) =>
+                    `<span class="tipo" style="background:${
+                      tipoCores[t] || "#777"
+                    }">${t}</span>`
+                )
+                .join(" ");
+              return `
+        <div class="card-pokemon">
+          <img src="${imgUrl}" alt="${p.nome}" />
+          <h3>${p.nome}</h3>
+          <p>ID: <span class="pokemon-id">${pokeData.id}</span></p>
+          <p>${tiposHtml}</p>
+        </div>
+      `;
+            })
+          );
 
-                resultadoTipoDiv.innerHTML = `
-                    <strong>Tipo:</strong> ${data.tipo} <br>
-                    <strong>Quantidade:</strong> ${data.quantidade} <br>
-                    <strong>Pokémons:</strong>
-                    <ul>
-                        ${data.pokemons.map(p => `<li>${p.nome}</li>`).join("")}
-                    </ul>
-                `;
-            } catch (err) {
-                resultadoTipoDiv.innerHTML = `<span style="color:red;">${err.message}</span>`;
-            }
+          listaHTML = listaHTML.join("");
+          let botaoProximo = `<button onclick="buscarPorTipo(${
+            data.next_offset
+          })" ${!data.next_offset ? "disabled" : ""}>Próximo ➡️</button>`;
+          let botaoAnterior = `<button onclick="buscarPorTipo(${
+            data.previous_offset
+          })" ${!data.previous_offset ? "disabled" : ""}>⬅️ Anterior</button>`;
+
+          resultadoTipoDiv.innerHTML = `
+      <p>Tipo: <strong>${data.tipo}</strong> | Total: ${data.quantidade_total}</p>
+      <div class="lista-cards">${listaHTML}</div>
+      <div class="botoes-paginacao">${botaoProximo}${botaoAnterior}</div>
+    `;
+        } catch (err) {
+          resultadoTipoDiv.innerHTML = `<p class="erro">⚠️ ${err.message}</p>`;
         }
+      }
 
-        let currentOffset = 0;
-        const limit = 100; // Quantos pokémons por página
+      // Listar Pokémons
+      async function listarPokemons(offset = 0) {
+        const listaDiv = document.getElementById("lista");
+        listaDiv.innerHTML = "Carregando...";
+        try {
+          const resp = await fetch(
+            `${API_URL}/pokemon?limit=${limit}&offset=${offset}`
+          );
+          if (!resp.ok) throw new Error("Erro ao carregar lista.");
+          const data = await resp.json();
 
-        async function listarPokemons(offset = 0) {
-            currentOffset = offset;
-            const listaDiv = document.getElementById("lista");
-            listaDiv.innerHTML = "Carregando...";
+          let listaHTML = await Promise.all(
+            data.pokemons.map(async (p) => {
+              const respPoke = await fetch(
+                `${API_URL}/pokemon/${p.nome.toLowerCase()}`
+              );
+              const pokeData = respPoke.ok
+                ? await respPoke.json()
+                : { id: "-", tipos: [] };
+              const imgUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokeData.id}.png`;
+              const tiposHtml = pokeData.tipos
+                .map(
+                  (t) =>
+                    `<span class="tipo" style="background:${
+                      tipoCores[t] || "#777"
+                    }">${t}</span>`
+                )
+                .join(" ");
+              return `
+        <div class="card-pokemon">
+          <img src="${imgUrl}" alt="${p.nome}" />
+          <h3>${p.nome}</h3>
+          <p>ID: <span class="pokemon-id">${pokeData.id}</span></p>
+          <p>${tiposHtml}</p>
+        </div>
+      `;
+            })
+          );
 
-            try {
-                const resp = await fetch(`${API_URL}/pokemon?limit=${limit}&offset=${offset}`);
-                if (!resp.ok) throw new Error("Erro ao carregar lista.");
-                const data = await resp.json();
+          listaHTML = listaHTML.join("");
+          let botaoProximo = `<button onclick="listarPokemons(${
+            data.next_offset
+          })" ${!data.next_offset ? "disabled" : ""}>Próximo ➡️</button>`;
+          let botaoAnterior = `<button onclick="listarPokemons(${
+            data.previous_offset
+          })" ${offset === 0 ? "disabled" : ""}>⬅️ Anterior</button>`;
 
-                listaDiv.innerHTML = data.pokemons.map(p =>
-                    `<div class="pokemon-item"><strong>${p.id}</strong> - ${p.nome}</div>`
-                ).join("");
-
-                // Adiciona botões de navegação
-                listaDiv.innerHTML += `
-                    <div style="margin-top: 10px; display: flex; justify-content: space-between;">
-                        <button onclick="listarPokemons(${data.previous_offset})" ${offset === 0 ? 'disabled' : ''}>Anterior</button>
-                        <button onclick="listarPokemons(${data.next_offset})">Próximo</button>
-                    </div>
-                `;
-
-            } catch (err) {
-                listaDiv.innerHTML = `<span style="color:red;">${err.message}</span>`;
-            }
+          listaDiv.innerHTML = `<div class="lista-cards">${listaHTML}</div><div class="botoes-paginacao">${botaoProximo}${botaoAnterior}</div>`;
+        } catch (err) {
+          listaDiv.innerHTML = `<p class="erro">⚠️ ${err.message}</p>`;
         }
+      }
     </script>
-</body>
-
+  </body>
 </html>

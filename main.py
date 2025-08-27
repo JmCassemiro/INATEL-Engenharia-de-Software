@@ -5,6 +5,7 @@ from fastapi.staticfiles import StaticFiles
 import uvicorn
 import requests
 
+
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -36,35 +37,51 @@ def listar_pokemons(limit: int = 100, offset: int = 0):
         dados = resposta.json()
         return {
             "pokemons": [
-                {
-                    "nome": p["name"].capitalize(),
-                    "id": int(p["url"].split("/")[-2])
-                }
+                {"nome": p["name"].capitalize(), "id": int(p["url"].split("/")[-2])}
                 for p in dados["results"]
             ],
             "next_offset": offset + limit,
-            "previous_offset": max(offset - limit, 0)
+            "previous_offset": max(offset - limit, 0),
         }
     else:
         raise HTTPException(status_code=404, detail="Pokémons não encontrados.")
-    
+
+
 @app.get("/pokemon/tipo/{tipo}")
-def listar_pokemons_por_tipo(tipo: str):
+def listar_pokemons_por_tipo(tipo: str, limit: int = 20, offset: int = 0):
     url = f"https://pokeapi.co/api/v2/type/{tipo.lower()}"
     resposta = requests.get(url)
     if resposta.status_code == 200:
         dados = resposta.json()
-        pokemons = [
+
+        pokemons_totais = [
             {
                 "nome": p["pokemon"]["name"].capitalize(),
-                "url": p["pokemon"]["url"]
+                "id": int(p["pokemon"]["url"].split("/")[-2]),
             }
             for p in dados["pokemon"]
         ]
-        return {"tipo": tipo.capitalize(), "pokemons": pokemons, "quantidade": len(pokemons)}
+
+        pokemons = pokemons_totais[offset : offset + limit]
+        next_offset = offset + limit if offset + limit < len(pokemons_totais) else None
+        previous_offset = max(offset - limit, 0) if offset > 0 else None
+
+        return {
+            "tipo": tipo.capitalize(),
+            "pokemons": pokemons,
+            "quantidade_total": len(pokemons_totais),
+            "next_offset": next_offset,
+            "previous_offset": previous_offset,
+        }
     else:
-        raise HTTPException(status_code=404, detail=f"Tipo '{tipo}' não encontrado.")
+        return {
+            "tipo": tipo.capitalize(),
+            "pokemons": [],
+            "quantidade_total": 0,
+            "next_offset": None,
+            "previous_offset": None,
+        }
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="127.0.0.1", port=4000, reload=True)
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)

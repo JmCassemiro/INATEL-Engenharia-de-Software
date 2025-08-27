@@ -1,4 +1,4 @@
-# Ignorar arquivos de cache do Python
+# Virtual environments
+.venv/
 __pycache__/
-*.py[cod]
-.flake8
+*.pyc
