@@ -23,13 +23,18 @@ Uma aplicação simples de Pokédex usando **FastAPI** no backend e HTML/CSS/JS 
 ## Estrutura do Projeto
 
 ```
-.
-├── main.py              # Backend FastAPI
+├── main.py # Backend FastAPI
+├── routers/ # Rotas da aplicação
+│ └── pokemon_router.py
+├── services/ # Lógica de negócio
+│ └── pokemon_service.py
+├── tests/ # Testes automatizados
+│ └── test_main.py
 ├── templates/
-│   └── index.html       # Frontend
+│ └── index.html # Frontend
 ├── static/
-│   └── style.css        # CSS
-├── Pipfile              # Pipenv
+│ └── style.css # CSS
+├── Pipfile # Pipenv
 ├── Pipfile.lock
 ├── .gitignore
 └── README.md
@@ -87,6 +92,7 @@ O parâmetro `--reload` reinicia o servidor automaticamente ao alterar o código
 
 - `GET /pokemon/{nome}` → retorna informações de um Pokémon específico
 - `GET /pokemon?limit=100&offset=0` → retorna uma lista de Pokémon com paginação
+- `GET /pokemon/tipo` → retorna uma lista de Pokémons filtrados pelo Tipo.
 
 ---
 
