@@ -66,8 +66,9 @@
         resultadoDiv.innerHTML = "Carregando...";
         try {
           const resp = await fetch(`${API_URL}/pokemon/${nome}`);
-          if (!resp.ok) throw new Error("Pokémon não encontrado!");
           const data = await resp.json();
+          if (!resp.ok)
+            throw new Error(data.detail || "Erro ao buscar Pokémon.");
           const imgUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${data.id}.png`;
           const tiposHtml = data.tipos
             .map(
@@ -99,8 +100,9 @@
           const resp = await fetch(
             `${API_URL}/pokemon/tipo/${tipo}?limit=${tipoLimit}&offset=${offset}`
           );
-          if (!resp.ok) throw new Error("Tipo não encontrado!");
           const data = await resp.json();
+          if (!resp.ok)
+            throw new Error(data.detail || "Erro ao buscar por tipo.");
 
           // Buscar dados completos de cada Pokémon
           let listaHTML = await Promise.all(
