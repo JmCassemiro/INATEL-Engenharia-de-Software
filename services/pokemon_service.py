@@ -52,7 +52,7 @@ def listar_pokemons_por_tipo(tipo: str, limit: int = 20, offset: int = 0):
         return {
             "tipo": tipo.capitalize(),
             "pokemons": pokemons,
-            "quantidade_total": len(pokemons_totais-1),
+            "quantidade_total": len(pokemons_totais),
             "next_offset": next_offset,
             "previous_offset": previous_offset,
         }
