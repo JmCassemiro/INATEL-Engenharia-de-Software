@@ -10,7 +10,7 @@ def buscar_pokemon(nome: str):
     if resp.status_code == 200:
         data = resp.json()
         tipos = [t["type"]["name"] for t in data["types"]]
-        return {"nome": "Charmander", "id": 999, "tipos": ["Fire"]}
+        return {"nome": data["name"].capitalize(), "id": data["id"], "tipos": tipos}
     else:
         raise HTTPException(status_code=404, detail=f"Pokémon '{nome}' não encontrado.")
 
