@@ -1,6 +1,6 @@
 ## Erros encontrados nos testes após PR
 
-Durante a integração de um Pull Request de um colega, houve uma regressão no arquivo `services/pokemon_service.py` (linha 13).  
+Durante a integração de um Pull Request, houve uma regressão no arquivo `services/pokemon_service.py` (linha 13).  
 Isso fez com que dois testes falhassem:
 
 - `test_buscar_pokemon_id`
